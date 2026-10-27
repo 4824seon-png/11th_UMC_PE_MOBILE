@@ -46,3 +46,15 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# TMDB 환경변수 (개인 Token). 키 이름만 담은 .env.example은 커밋한다
+.env
+
+# VS Code 개인 설정 (에디터·확장 프로그램별 설정이라 공유하지 않는다)
+.vscode/
+
+flutter:
+  assets:
+    - .envflutter:
+  assets:
+    - .env

@@ -1,22 +1,48 @@
+// 영화 상세 화면: TMDB 포스터·정보·줄거리, 즐겨찾기·평점 Dialog·공유 BottomSheet
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View
+//
+// [기능]
+//   - MovieDetailScreen(movieId, movie?) : 목록·홈에서 extra로 받은 TmdbMovieDto를 표시
+//   - 즐겨찾기 토글 + Snackbar, 평점 Dialog(showDialog<double>), 공유 BottomSheet
+//
+// [동작]
+//   URL의 movieId가 기준. extra의 movie가 없거나(딥링크·재시작) id가 다르면 안내 화면
+//   평균 평점: TMDB 10점 → 별 5개로 환산 + '8.5 / 10' / 내 평점: 5점 그대로 '4.5 / 5'
+//   줄거리가 빈 문자열이면 '줄거리 정보가 없어요.'
+//   [미션 8] 평점 남기기 → RatingDialog(movieId: movie.id)
+//
+// [의존성]
+//   사용   : flutter_rating_bar, data/models/tmdb_movie_dto.dart,
+//            widgets/tmdb_poster_image.dart, screens/movie_detail/widgets/rating_dialog.dart
+//   사용처 : router/app_router.dart (/movies/:movieId, extra)
+//
+// [교체·수정 예정]
+//   - 이후: TMDB 상세 API(/movie/{id})로 id만으로도 표시(딥링크·러닝타임·장르 이름)
+//   - 이후: 즐겨찾기·평점을 MovieLog 자체 API에 저장
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-import '../../data/mock_movies.dart';
-import '../../models/movie.dart';
+import '../../data/models/tmdb_movie_dto.dart';
+import '../../widgets/tmdb_poster_image.dart';
 import 'widgets/rating_dialog.dart';
 
 /// 영화 상세 화면. 경로 /movies/:movieId
 /// ShellRoute 밖에 있어서 NavigationBar가 표시되지 않는다.
 ///
 /// 즐겨찾기 여부와 내가 남긴 평점을 화면 안에서 기억해야 하므로 StatefulWidget으로 만든다.
-/// (Required 조건: 평점·즐겨찾기는 화면 내부 상태로만 처리 → 상세를 나갔다 오면 초기화되는 것이 정상)
+/// (평점·즐겨찾기는 화면 내부 상태로만 처리 → 상세를 나갔다 오면 초기화되는 것이 정상)
 class MovieDetailScreen extends StatefulWidget {
-  const MovieDetailScreen({super.key, required this.movieId});
+  const MovieDetailScreen({super.key, required this.movieId, this.movie});
 
-  /// Path Parameter에서 읽은 영화 ID. 숫자가 아니면 null.
-  /// 객체(Extra)가 아니라 id를 받는 이유: 딥링크·앱 재시작처럼 객체가 없는 상황에서도
-  /// URL만으로 같은 화면을 복원할 수 있다.
+  /// Path Parameter에서 읽은 TMDB 영화 id. 숫자가 아니면 null.
   final int? movieId;
+
+  /// [5주차] 카드·히어로에서 push할 때 extra로 함께 넘긴 영화.
+  /// URL에 남지 않으므로 딥링크·앱 재시작으로 열리면 null이다.
+  final TmdbMovieDto? movie;
 
   @override
   State<MovieDetailScreen> createState() => _MovieDetailScreenState();
@@ -29,53 +55,37 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
   // ── Snackbar ──
   void _showSnackBar(String message) {
     final messenger = ScaffoldMessenger.of(context);
-    // Snackbar는 대기열에 쌓인다. 즐겨찾기를 빠르게 여러 번 누르면 메시지가 차례로 몇 초씩 이어지므로
-    // 현재 Snackbar를 먼저 닫고 최신 결과만 보여준다.
+    // 즐겨찾기를 빠르게 여러 번 누르면 메시지가 쌓이므로 현재 Snackbar를 먼저 닫는다.
     messenger.hideCurrentSnackBar();
     messenger.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        // [결정] Snackbar 형태: floating
-        // - 여백을 두고 떠 있는 카드 형태(Notion 13번 예시). 하단 버튼 영역 위에 표시된다.
-        // - 대안: fixed → 화면 하단에 붙는 기본 형태.
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
   // ── 즐겨찾기 ──
-  // 하나의 bool(_isFavorite)이 아이콘과 Snackbar 문구를 함께 결정한다.
   void _toggleFavorite() {
     setState(() => _isFavorite = !_isFavorite);
     _showSnackBar(_isFavorite ? '즐겨찾기에 추가했어요.' : '즐겨찾기에서 삭제했어요.');
   }
 
   // ── 평점 남기기 (Dialog) ──
-  // showDialog는 Dialog가 닫힐 때까지 기다리는 Future를 반환하므로 async/await를 사용한다.
-  Future<void> _openRatingDialog() async {
-    // <double>: Dialog가 Navigator.pop(context, rating)으로 돌려줄 값의 타입.
+  // [미션 8] 어떤 영화의 평점인지 TMDB id를 Dialog에 전달한다.
+  Future<void> _openRatingDialog(int movieId) async {
     // 바깥 영역 탭·뒤로가기로 닫으면 값 없이 닫혀 null이 온다 → 반환 타입은 double?.
     final rating = await showDialog<double>(
       context: context,
-      builder: (dialogContext) => const RatingDialog(),
+      builder: (dialogContext) => RatingDialog(movieId: movieId),
     );
 
-    // 취소했거나, 기다리는 동안 화면이 사라졌으면(mounted == false) 이후 context를 쓰지 않는다.
+    // 취소했거나, 기다리는 동안 화면이 사라졌으면 이후 context를 쓰지 않는다.
     if (rating == null || !mounted) return;
 
-    // [결정] Dialog 결과 반영: 상세 State에 저장 + 버튼 문구 변경 + Snackbar
-    // - 반환값이 화면(내 평점 별, 버튼 문구)에 반영되는 것을 확인할 수 있다.
-    // - 대안: Snackbar로 안내만 하고 값은 저장하지 않음.
     setState(() => _myRating = rating);
     _showSnackBar('$rating점을 남겼어요.');
   }
 
   // ── 공유 (BottomSheet) ──
   Future<void> _openShareSheet() async {
-    // [결정] BottomSheet 사용처: AppBar 공유 아이콘 → 공유 옵션 시트
-    // - 스터디 인증·최종 체크리스트의 "Dialog, BottomSheet, Snackbar 모두 사용"을 충족한다.
-    // - BottomSheet도 Dialog처럼 Navigator에 쌓이는 route라서 pop(context, 값)으로 결과를 돌려받는다.
-    // - 대안: 사용하지 않음(인증 항목 누락) / Challenge의 장르 필터 시트(이번 범위 제외).
     final option = await showModalBottomSheet<String>(
       context: context,
       useSafeArea: true, // 위·좌·우 시스템 영역(상태바 등)을 피한다
@@ -85,31 +95,31 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
 
     if (option == null || !mounted) return;
 
-    // 시트가 이미 닫힌 뒤, 시트의 context가 아닌 화면의 context로 Snackbar를 띄운다.
-    // (시트가 열린 상태로 띄우면 시트에 가려 보이지 않는다 — Notion '자주 발생하는 오류')
+    // 시트가 닫힌 뒤, 시트의 context가 아닌 화면의 context로 Snackbar를 띄운다.
     _showSnackBar('$option 완료 (Mock)');
   }
 
   @override
   Widget build(BuildContext context) {
-    // 라우터는 URL 해석만, 화면은 id로 데이터를 조회해 표시한다.
-    // State 안에서는 생성자 값을 widget.으로 읽는다.
-    final movie = findMovieById(widget.movieId);
+    final movie = widget.movie;
 
-    // 잘못된 id(/movies/abc, /movies/999)에 대한 방어.
-    // 이 분기 이후로는 Dart가 movie를 non-null(Movie)로 취급한다(타입 승격).
-    if (movie == null) {
+    // URL의 id가 기준이다. extra가 없거나(딥링크·재시작) URL id와 다르면 표시하지 않는다.
+    // 이 분기 이후로는 Dart가 movie를 non-null(TmdbMovieDto)로 취급한다(타입 승격).
+    if (movie == null || movie.id != widget.movieId) {
       return Scaffold(
         appBar: AppBar(),
-        body: const Center(child: Text('영화를 찾을 수 없어요.')),
+        body: const Center(
+          child: Text(
+            '영화 정보를 찾을 수 없어요.\n목록에서 다시 선택해 주세요.',
+            textAlign: TextAlign.center,
+          ),
+        ),
       );
     }
 
     final myRating = _myRating;
 
     return Scaffold(
-      // push로 들어왔으므로 이전 화면이 있다 → AppBar가 ← 뒤로 버튼을 자동으로 만든다.
-      // (go로 들어와 돌아갈 곳이 없으면 버튼이 자동으로 사라진다)
       appBar: AppBar(
         title: const Text('영화 상세'),
         actions: [
@@ -127,7 +137,8 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             // 스크롤 안에서는 높이가 무한하므로 AspectRatio로 이미지 높이를 정한다.
             AspectRatio(
               aspectRatio: 3 / 4,
-              child: Image.asset(movie.posterAsset, fit: BoxFit.cover),
+              // [5주차] Image.asset → TMDB 포스터 (null·로드 실패 시 placeholder)
+              child: TmdbPosterImage(posterPath: movie.posterPath),
             ),
             Padding(
               padding: const EdgeInsets.all(16),
@@ -136,68 +147,84 @@ class _MovieDetailScreenState extends State<MovieDetailScreen> {
             const Divider(height: 1),
             Padding(
               padding: const EdgeInsets.all(16),
-              child: _Synopsis(text: movie.synopsis),
+              child: _Synopsis(text: movie.overview),
             ),
           ],
         ),
       ),
-      // bottomNavigationBar는 NavigationBar 전용 자리가 아니라 "하단 고정 영역"이다.
-      // 여기에 두면 본문 스크롤과 관계없이 버튼이 항상 하단에 보인다.
+      // bottomNavigationBar = "하단 고정 영역". 본문 스크롤과 관계없이 버튼이 항상 보인다.
       bottomNavigationBar: _DetailActions(
         isFavorite: _isFavorite,
         myRating: myRating,
         onFavoritePressed: _toggleFavorite,
-        onRatingPressed: _openRatingDialog,
+        onRatingPressed: () => _openRatingDialog(movie.id),
       ),
     );
   }
 }
 
-/// 제목·연도/장르/러닝타임·평균 평점·(있으면) 내 평점.
+/// 제목·개봉 연도·평균 평점(10점)·(있으면) 내 평점(5점).
 class _MovieInfo extends StatelessWidget {
   const _MovieInfo({required this.movie, required this.myRating});
 
-  final Movie movie;
+  final TmdbMovieDto movie;
   final double? myRating;
+
+  /// 'YYYY-MM-DD'에서 연도. 개봉일이 null·빈 문자열이면 null → 연도 줄을 그리지 않는다.
+  String? get _releaseYear {
+    final date = movie.releaseDate;
+    if (date == null || date.length < 4) return null;
+    return '${date.substring(0, 4)}년 개봉';
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final myRating = this.myRating; // 로컬 변수로 옮겨야 null 체크 후 타입 승격이 된다.
+    final releaseYear = _releaseYear;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(movie.title, style: textTheme.headlineSmall),
-        const SizedBox(height: 4),
-        Text(
-          '${movie.year} • ${movie.genre} • ${movie.runningTime}분',
-          style: textTheme.bodyMedium?.copyWith(color: colors.onSurfaceVariant),
-        ),
+        if (releaseYear != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            releaseYear,
+            style: textTheme.bodyMedium?.copyWith(
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
-        // 영화의 평균 평점: 사용자가 수정할 필요가 없는 값 → 읽기 전용 RatingBarIndicator.
-        _ReadOnlyRating(label: '평균', rating: movie.rating),
-        // 사용자가 이미 등록한 평점도 읽기 전용이므로 같은 방식으로 표시한다.
+        // TMDB 평균 평점: 10점 만점
+        _ReadOnlyRating(label: '평균', rating: movie.voteAverage, maxRating: 10),
+        // 사용자가 Dialog로 남긴 평점: 5점 만점
         if (myRating != null) ...[
           const SizedBox(height: 8),
-          _ReadOnlyRating(label: '내 평점', rating: myRating),
+          _ReadOnlyRating(label: '내 평점', rating: myRating, maxRating: 5),
         ],
       ],
     );
   }
 }
 
-/// 읽기 전용 별점 한 줄: 라벨 + RatingBarIndicator + 숫자.
+/// 읽기 전용 별점 한 줄: 라벨 + 별 5개 + '값 / 만점'.
 ///
-/// RatingBarIndicator vs RatingBar.builder (Notion 10번)
-/// - RatingBarIndicator: 전달받은 값을 표시만 한다. 4.3처럼 0.5 단위가 아닌 값도 표시 가능.
-/// - RatingBar.builder: 사용자가 입력한다(MovieRatingInput에서 사용).
+/// [결정] 만점이 달라도 별은 항상 5개로 그리고, 숫자에 단위를 적는다.
+/// - 평균(10점) 8.5 → 별 4.25개 + '8.5 / 10', 내 평점(5점) 4.5 → 별 4.5개 + '4.5 / 5'
+/// - 대안: 평균만 별 10개 → 두 줄의 별 개수가 달라 비교가 어려워 제외.
 class _ReadOnlyRating extends StatelessWidget {
-  const _ReadOnlyRating({required this.label, required this.rating});
+  const _ReadOnlyRating({
+    required this.label,
+    required this.rating,
+    required this.maxRating,
+  });
 
   final String label;
   final double rating;
+  final int maxRating; // 10(TMDB 평균) 또는 5(내 평점)
 
   @override
   Widget build(BuildContext context) {
@@ -216,21 +243,23 @@ class _ReadOnlyRating extends StatelessWidget {
           ),
         ),
         RatingBarIndicator(
-          rating: rating,
+          rating: rating / maxRating * 5, // 만점 기준 비율을 별 5개로 환산
           itemCount: 5,
           itemSize: 20,
-          // 별 색은 MovieRatingInput과 같이 테마의 primary(디자인의 보라색)를 사용한다.
           itemBuilder: (context, index) =>
               Icon(Icons.star, color: colors.primary),
         ),
         const SizedBox(width: 8),
-        Text(rating.toStringAsFixed(1), style: textTheme.titleMedium),
+        Text(
+          '${rating.toStringAsFixed(1)} / $maxRating',
+          style: textTheme.titleMedium,
+        ),
       ],
     );
   }
 }
 
-/// 시놉시스 제목 + 본문.
+/// 줄거리 제목 + 본문. TMDB overview가 빈 문자열이면 안내 문구를 가운데에 표시한다.
 class _Synopsis extends StatelessWidget {
   const _Synopsis({required this.text});
 
@@ -238,14 +267,29 @@ class _Synopsis extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('시놉시스', style: textTheme.titleLarge),
+        Text('줄거리', style: textTheme.titleLarge),
         const SizedBox(height: 8),
-        Text(text, style: textTheme.bodyLarge?.copyWith(height: 1.6)),
+        // TMDB는 줄거리가 없으면 null이 아니라 ""를 준다 → isEmpty로 확인한다.
+        if (text.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Center(
+              child: Text(
+                '줄거리 정보가 없어요.',
+                style: textTheme.bodyLarge?.copyWith(
+                  color: colors.onSurfaceVariant,
+                ),
+              ),
+            ),
+          )
+        else
+          Text(text, style: textTheme.bodyLarge?.copyWith(height: 1.6)),
       ],
     );
   }
@@ -277,11 +321,9 @@ class _DetailActions extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
         child: Row(
           children: [
-            // Expanded 두 개 → 남은 가로 공간을 1:1로 나눈다.
             Expanded(
               child: OutlinedButton.icon(
                 onPressed: onFavoritePressed,
-                // 즐겨찾기 상태에 따라 아이콘이 바뀐다 (채움 / 테두리).
                 icon: Icon(isFavorite ? Icons.bookmark : Icons.bookmark_border),
                 label: const Text('즐겨찾기'),
                 style: OutlinedButton.styleFrom(
@@ -327,14 +369,12 @@ class _ShareSheet extends StatelessWidget {
     // 하단 제스처 바 영역은 useSafeArea가 처리하지 않으므로 SafeArea로 직접 피한다.
     return SafeArea(
       child: Column(
-        // 시트가 내용 높이만큼만 올라오도록 한다 (Dialog의 mainAxisSize.min과 같은 이유).
         mainAxisSize: MainAxisSize.min,
         children: [
           for (final option in _options)
             ListTile(
               leading: Icon(option.icon),
               title: Text(option.label),
-              // 여기서 context는 시트 안쪽 → 시트가 닫히고 label이 showModalBottomSheet의 반환값이 된다.
               onTap: () => Navigator.pop(context, option.label),
             ),
         ],

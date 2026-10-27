@@ -1,3 +1,24 @@
+// 마이 탭 화면: 프로필 헤더, 활동 통계, 선호 장르
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View
+//
+// [기능]
+//   - ProfileScreen  : AppBar + 아래 세 영역
+//   - ProfileHeader  : 프로필 이미지·닉네임
+//   - ProfileStats   : 본 영화·평점·즐겨찾기 통계 카드 3개 (고정 값)
+//   - FavoriteGenres : 선호 장르 Chip (고정 값)
+//
+// [동작]
+//   상태 없는 정적 화면 (StatelessWidget)
+//
+// [의존성]
+//   사용   : flutter_svg, widgets/movielog_app_bar.dart, screens/profile/widgets/stat_item.dart
+//   사용처 : router/app_router.dart (/my)
+//
+// [교체·수정 예정]
+//   - 없음 (5주차 범위 밖). 이후 자체 API 연동 시 통계·장르를 실제 값으로 교체한다.
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../widgets/movielog_app_bar.dart';
