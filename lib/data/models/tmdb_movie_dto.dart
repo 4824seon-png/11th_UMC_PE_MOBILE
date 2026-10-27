@@ -14,10 +14,12 @@
 // [의존성]
 //   사용   : 없음 (순수 데이터)
 //   사용처 : data/models/tmdb_movie_page_dto.dart, view_models/movie_home_view_model.dart,
-//            widgets/tmdb_movie_card.dart, screens/home/home_screen.dart
+//            view_models/movie_list_view_model.dart, widgets/tmdb_movie_card.dart,
+//            screens/home/home_screen.dart, screens/movie_list/widgets/movie_grid.dart,
+//            screens/movie_detail/movie_detail_screen.dart, router/app_router.dart (extra)
 //
 // [교체·수정 예정]
-//   - Required: MovieListViewModel·MovieGrid에서도 사용 (id는 평점 API의 movieId)
+//   - 없음. id는 상세 화면 URL과 평점 Dialog의 movieId로 그대로 쓰인다.
 // ─────────────────────────────────────────────────────────────
 
 class TmdbMovieDto {

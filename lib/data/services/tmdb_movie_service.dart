@@ -13,11 +13,11 @@
 //
 // [의존성]
 //   사용   : dio, data/models/tmdb_movie_page_dto.dart, data/models/tmdb_genre_dto.dart
-//   사용처 : app/movie_log_app.dart (생성), view_models/movie_home_view_model.dart
+//   사용처 : app/movie_log_app.dart (생성), view_models/movie_home_view_model.dart (fetchPopular),
+//            view_models/movie_list_view_model.dart (discoverMovies, fetchGenres)
 //
 // [교체·수정 예정]
 //   - 없음. '5개·30개·선택 장르' 같은 화면 정책은 넣지 않는다(ViewModel 담당).
-//   - Required: MovieListViewModel이 discoverMovies·fetchGenres를 사용한다.
 // ─────────────────────────────────────────────────────────────
 
 import 'package:dio/dio.dart';

@@ -12,10 +12,11 @@
 //
 // [의존성]
 //   사용   : flutter/material
-//   사용처 : widgets/tmdb_movie_card.dart, screens/home/home_screen.dart
+//   사용처 : widgets/tmdb_movie_card.dart, screens/home/home_screen.dart,
+//            screens/movie_detail/movie_detail_screen.dart
 //
 // [교체·수정 예정]
-//   - 없음. Required 8: 상세 화면 포스터에도 재사용 가능
+//   - 없음.
 // ─────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';

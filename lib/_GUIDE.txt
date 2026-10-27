@@ -11,6 +11,7 @@
                                ▼
    [Service]     data/services/            HTTP 요청 + JSON → DTO 변환 (상태 없음)
    [Model]       data/models/              응답 데이터 그릇(DTO)
+   [Storage]     data/storage/             기기 저장소 (마지막 선택 장르 id)
    [Core]        core/                     Dio Client·Token 설정·테마 (앱 전역)
                                │
                                ▼
@@ -22,10 +23,10 @@
    app/             앱 최상단 위젯: MultiProvider + MaterialApp.router
    router/          URL ↔ 화면 연결, 화면별 ViewModel 생성
    core/            config(Token) · network(Dio·로그) · theme(색·글꼴)
-   data/            models(DTO) · services(TMDB) · storage(기기 저장) · legacy(4주차 Mock)
-   view_models/     화면별 ViewModel (ChangeNotifier)
+   data/            models(DTO) · services(TMDB) · storage(기기 저장)
+   view_models/     화면별 ViewModel (ChangeNotifier): 홈, 영화 탭
    screens/         화면(View) — 화면별 폴더, 전용 위젯은 각 폴더의 widgets/
-   widgets/         여러 화면이 함께 쓰는 공통 위젯
+   widgets/         여러 화면이 함께 쓰는 공통 위젯 (AppBar, TMDB 카드·포스터)
 
 ■ import 방향 규칙 (위 → 아래로만 import)
 
@@ -33,40 +34,39 @@
         ↓
    view_models
         ↓
-   data/services → data/models
+   data/services · data/storage → data/models
         ↓
    core
 
    - 반대 방향 금지: Service가 ViewModel이나 Widget을 import하면 안 된다.
    - 화면(View)은 Service를 직접 부르지 않는다. 반드시 ViewModel을 거친다.
-   - DTO(data/models)는 아무것도 import하지 않는 순수 데이터다.
+   - DTO(data/models)는 서로만 import하는 순수 데이터다.
+   - 예외: router/는 화면·ViewModel·Service를 모두 알고 연결한다(조립 담당).
 
 ■ 앱 실행 흐름
 
    main() ─ dotenv.load('.env') ─ runApp(MovieLogApp)
      └ app/movie_log_app.dart : MultiProvider(TmdbMovieService) → MaterialApp.router
          └ router/app_router.dart : /start → /register → /home (ShellRoute 탭)
-             └ /home : ChangeNotifierProvider(MovieHomeViewModel..loadPopular())
-                 └ screens/home/home_screen.dart : Consumer로 상태 표시
+             ├ /home   : MovieHomeViewModel..loadPopular()  → 인기 5개
+             ├ /movies : MovieListViewModel..loadInitial()  → 장르 + Discover 최대 30개
+             └ /movies/:movieId (extra: TmdbMovieDto)       → 상세 → 평점 Dialog(movieId)
 
 ■ 파일 헤더 주석 읽는 법 (모든 .dart 파일 맨 위)
 
    첫 줄           이 파일이 하는 일
-   [계층]          UI Layer(View·ViewModel) / Data Layer / Core / Legacy
+   [계층]          UI Layer(View·ViewModel) / Data Layer / Core
    [기능]          공개 클래스·메서드와 역할
    [동작]          실행 흐름 요약
    [의존성]        사용(이 파일이 import) / 사용처(이 파일을 쓰는 곳)
-   [교체·수정 예정] Required Mission 등에서 바뀌거나 삭제될 부분
+   [교체·수정 예정] 이후 주차·Challenge에서 바뀔 부분 (없으면 "없음")
 
 ■ 진행 상태 (5주차)
 
-   완료      5~11단계, 14단계(홈) = Guided Practice (홈 인기 영화 5개)
-   다음      Required Mission
-             - 12. Discover 최대 30개 / 13. 장르 with_genres 재조회
-             - 14. /movies에 MovieListViewModel 연결
-             - 8.  상세·평점 Dialog로 TmdbMovieDto.id 전달
-   정리 예정  data/legacy/, widgets/movie_card.dart,
-             screens/movie_list/widgets/load_mode_menu.dart (Required 완료 후 삭제)
+   완료      Essential 5~14, Guided Practice(홈 인기 5개), Required Mission 1~8
+   남음      Challenge(선택): Pull to Refresh, 장르 다중 선택, 재시도 Dialog, 실패 로그 재현
+   정리 완료  4주차 Mock(mock_movies·movie·fake_movie_service), MovieCard, LoadModeMenu 삭제
+             예전 코드 확인: git show feature/week-4:lib/data/mock_movies.dart
 
 ■ 주의
 

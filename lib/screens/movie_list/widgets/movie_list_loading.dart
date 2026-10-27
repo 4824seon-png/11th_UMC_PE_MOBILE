@@ -13,7 +13,7 @@
 //   사용처 : screens/movie_list/movie_list_screen.dart
 //
 // [교체·수정 예정]
-//   - 없음. Required에서 그대로 재사용한다.
+//   - 없음. (4주차 위젯을 5주차 ViewModel 상태에서도 그대로 재사용)
 // ─────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';

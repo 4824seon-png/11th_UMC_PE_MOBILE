@@ -19,7 +19,7 @@
 //   사용처 : router/app_router.dart (/home)
 //
 // [교체·수정 예정]
-//   - Required 8: 상세보기·카드 탭 시 TMDB id로 상세 화면이 영화를 표시하도록 연결
+//   - 없음. 상세보기·카드 탭은 TMDB id(URL)와 영화(extra)를 상세 화면에 넘긴다.
 // ─────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
@@ -198,7 +198,7 @@ class _HomeHeroCard extends StatelessWidget {
                     width: double.infinity,
                     height: 52,
                     child: ElevatedButton.icon(
-                      // TMDB id를 그대로 전달한다. (상세 화면의 TMDB 연동은 Required에서 처리)
+                      // [미션 8] URL에는 TMDB id, extra에는 화면 표시용 영화 데이터.
                       onPressed: () =>
                           context.push('/movies/${movie.id}', extra: movie),
                       icon: const Icon(Icons.info),

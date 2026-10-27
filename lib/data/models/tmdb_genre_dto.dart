@@ -11,10 +11,11 @@
 //
 // [의존성]
 //   사용   : 없음 (순수 데이터)
-//   사용처 : data/services/tmdb_movie_service.dart
+//   사용처 : data/services/tmdb_movie_service.dart, view_models/movie_list_view_model.dart,
+//            screens/movie_list/widgets/genre_chip_bar.dart
 //
 // [교체·수정 예정]
-//   - Required 13: MovieListViewModel.genres와 GenreChipBar의 Chip 목록으로 사용
+//   - 없음.
 // ─────────────────────────────────────────────────────────────
 
 class TmdbGenreDto {

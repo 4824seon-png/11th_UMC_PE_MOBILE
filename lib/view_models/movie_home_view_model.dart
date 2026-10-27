@@ -18,7 +18,7 @@
 //   사용처 : router/app_router.dart (/home에서 생성), screens/home/home_screen.dart (Consumer)
 //
 // [교체·수정 예정]
-//   - 없음. Required의 MovieListViewModel이 같은 구조(status·_disposed·예외 처리)를 따른다.
+//   - 없음. MovieListViewModel도 같은 구조(status·_disposed·예외 처리)를 따른다.
 // ─────────────────────────────────────────────────────────────
 
 import 'package:dio/dio.dart';

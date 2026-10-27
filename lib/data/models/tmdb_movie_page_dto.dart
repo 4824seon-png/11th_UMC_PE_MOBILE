@@ -15,7 +15,7 @@
 //   사용처 : data/services/tmdb_movie_service.dart
 //
 // [교체·수정 예정]
-//   - Required 12: MovieListViewModel의 최대 30개 수집 종료 조건(pageNumber < totalPages)
+//   - 없음. totalPages는 MovieListViewModel의 최대 30개 수집 종료 조건(pageNumber < totalPages)에 쓰인다.
 // ─────────────────────────────────────────────────────────────
 
 import 'tmdb_movie_dto.dart';

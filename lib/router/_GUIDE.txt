@@ -13,10 +13,11 @@
    /register           RegisterScreen       탭 없음
    ── ShellRoute (MainScreen = 하단 탭) ──
    /home               HomeScreen           + MovieHomeViewModel..loadPopular()
-   /movies             MovieListScreen      (Required에서 MovieListViewModel 연결)
+   /movies             MovieListScreen      + MovieListViewModel(service, GenrePreference())..loadInitial()
    /my                 ProfileScreen
    ──
-   /movies/:movieId    MovieDetailScreen    탭 없음, TMDB id를 Path Parameter로 받음
+   /movies/:movieId    MovieDetailScreen    탭 없음, URL = TMDB id, extra = TmdbMovieDto
+                                            (extra is TmdbMovieDto일 때만 전달, as 강제 변환 금지)
 
 ■ ViewModel 생성 방식 (/home 예시)
    ChangeNotifierProvider(
@@ -35,6 +36,5 @@
    - router는 static final (앱 전체에서 1개). build 안에서 만들면 위치가 초기화된다.
    - MainScreen 탭 순서(홈 0, 영화 1, 마이 2)와 indexFromLocation 번호를 맞춘다.
 
-■ 예정된 변경 (Required Mission)
-   - /movies: ChangeNotifierProvider<MovieListViewModel>(..loadInitial())로 감싸기
-   - /movies/:movieId: TMDB id로 상세 화면이 영화를 표시하도록 보완 (미션 8)
+■ 예정된 변경
+   - 이후: 상세 화면을 TMDB 상세 API로 바꾸면 extra 없이 id만 전달 (딥링크 지원)
