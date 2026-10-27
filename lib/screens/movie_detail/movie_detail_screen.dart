@@ -1,3 +1,25 @@
+// 영화 상세 화면: 포스터·정보·시놉시스, 즐겨찾기·평점 Dialog·공유 BottomSheet
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View
+//
+// [기능]
+//   - MovieDetailScreen(movieId) : id로 영화 조회 후 표시 (없으면 '영화를 찾을 수 없어요')
+//   - 즐겨찾기 토글 + Snackbar, 평점 Dialog(showDialog<double>), 공유 BottomSheet
+//
+// [동작]
+//   build에서 findMovieById(widget.movieId)로 Mock 조회 → 화면 내부 State로 즐겨찾기·내 평점 관리
+//
+// [의존성]
+//   사용   : flutter_rating_bar, data/legacy/mock_movies.dart, data/legacy/movie.dart,
+//            screens/movie_detail/widgets/rating_dialog.dart
+//   사용처 : router/app_router.dart (/movies/:movieId)
+//
+// [교체·수정 예정]
+//   - Required 8: TMDB id로 진입하면 Mock에 없어 '찾을 수 없음'이 뜬다 → TMDB 데이터로 표시 방식 변경
+//   - Required 8: 평점 Dialog로 TmdbMovieDto.id(movieId)를 전달
+//   - legacy 의존(mock_movies·movie) 제거
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 

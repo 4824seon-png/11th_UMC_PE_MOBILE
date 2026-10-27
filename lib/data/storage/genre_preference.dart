@@ -1,3 +1,23 @@
+// 영화 목록에서 마지막으로 선택한 장르를 기기에 저장·복원한다 (shared_preferences)
+// ─────────────────────────────────────────────────────────────
+// [계층]   Data Layer · Storage
+//
+// [기능]
+//   - read()  : 저장된 장르 (없으면 '전체')
+//   - save(genre) / clear()
+//
+// [동작]
+//   SharedPreferencesAsync에 'selected_genre' Key로 문자열을 저장한다
+//
+// [의존성]
+//   사용   : shared_preferences, data/legacy/mock_movies.dart (allGenre)
+//   사용처 : screens/movie_list/movie_list_screen.dart
+//
+// [교체·수정 예정]
+//   - Required: 장르 '이름(String)' 대신 TMDB '장르 id(int?)'를 저장하도록 변경
+//   - Required: legacy/mock_movies.dart 의존 제거 ('전체' = null)
+// ─────────────────────────────────────────────────────────────
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../legacy/mock_movies.dart';

@@ -1,3 +1,27 @@
+// 홈 탭 화면: TMDB 인기 1위 히어로 카드와 인기 영화 5개 가로 목록
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View
+//
+// [기능]
+//   - HomeScreen       : AppBar + 인사 문구 + Consumer(상태별 영역)
+//   - _PopularContent  : Success — 히어로 + '인기 영화' 헤더 + 가로 목록
+//   - _HomeHeroCard    : 인기 1위 포스터·제목·'연도 · ★ 10점'·상세보기
+//   - _HomeLoading / _HomeMessage : Loading / Error(다시 시도)·Empty
+//
+// [동작]
+//   notifyListeners → Consumer builder만 다시 실행 → switch(status)로 4가지 중 하나 표시
+//   인사 문구·AppBar는 Consumer 밖이라 다시 그리지 않는다
+//   다시 시도 → context.read<MovieHomeViewModel>().loadPopular()
+//
+// [의존성]
+//   사용   : provider, go_router, view_models/movie_home_view_model.dart, data/models/tmdb_movie_dto.dart,
+//            widgets/movielog_app_bar.dart, widgets/tmdb_movie_card.dart, widgets/tmdb_poster_image.dart
+//   사용처 : router/app_router.dart (/home)
+//
+// [교체·수정 예정]
+//   - Required 8: 상세보기·카드 탭 시 TMDB id로 상세 화면이 영화를 표시하도록 연결
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';

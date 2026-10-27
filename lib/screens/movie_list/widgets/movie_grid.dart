@@ -1,3 +1,21 @@
+// 영화 목록을 2열 Grid로 그리는 위젯 (Success 상태 화면)
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (영화 목록 전용 위젯)
+//
+// [기능]
+//   - MovieGrid(movies) : Figma 간격(좌우 16, 열 16, 행 24), 칸 높이 = 포스터(너비×1.5) + 60
+//
+// [동작]
+//   LayoutBuilder로 칸 너비 계산 → GridView.builder로 보이는 칸만 생성
+//
+// [의존성]
+//   사용   : data/legacy/movie.dart, widgets/movie_card.dart
+//   사용처 : screens/movie_list/movie_list_screen.dart
+//
+// [교체·수정 예정]
+//   - Required: List<Movie> → List<TmdbMovieDto>, MovieCard → TmdbMovieCard
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 
 import '../../../data/legacy/movie.dart';

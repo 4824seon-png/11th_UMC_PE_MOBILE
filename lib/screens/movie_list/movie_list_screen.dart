@@ -1,3 +1,26 @@
+// 영화 탭 화면: 장르 Chip + 영화 Grid (현재 4주차 Mock 기반)
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (현재 State가 상태·로직을 함께 가짐)
+//
+// [기능]
+//   - FakeMovieService로 목록 요청 → FutureBuilder로 Loading/Error/Empty/Success 분기
+//   - 장르 Chip 선택 → 받은 목록을 로컬 where로 필터 (_filterByGenre)
+//   - GenrePreference로 마지막 장르 저장·복원, (debug) LoadModeMenu로 결과 모드 전환
+//
+// [동작]
+//   initState: _moviesFuture 생성 + 장르 복원 → build: FutureBuilder가 Future 상태를 관찰
+//
+// [의존성]
+//   사용   : data/legacy/*, data/storage/genre_preference.dart, widgets/movielog_app_bar.dart,
+//            screens/movie_list/widgets/*, flutter_svg
+//   사용처 : router/app_router.dart (/movies)
+//
+// [교체·수정 예정]
+//   - Required: StatefulWidget·FutureBuilder → Consumer<MovieListViewModel> + switch(status)
+//   - Required 13: 로컬 필터(_filterByGenre) 삭제 → 장르 선택 시 with_genres로 서버 재조회
+//   - Required: FakeMovieService·LoadModeMenu 제거, GenrePreference를 장르 id 기반으로 변경
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';

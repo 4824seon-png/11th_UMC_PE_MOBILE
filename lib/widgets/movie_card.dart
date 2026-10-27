@@ -1,3 +1,21 @@
+// [삭제 예정] 4주차 Mock 영화 카드 (포스터·★5점 평점·제목·연도/장르)
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (공통 위젯, Legacy)
+//
+// [기능]
+//   - MovieCard(movie: Movie) : Image.asset 포스터 + 평점 뱃지 + 제목·부제, 탭 → 상세
+//
+// [동작]
+//   크기는 부모가 정한다 (Grid 칸). 내부 Expanded가 남은 높이를 포스터에 준다
+//
+// [의존성]
+//   사용   : go_router, data/legacy/movie.dart
+//   사용처 : screens/movie_list/widgets/movie_grid.dart
+//
+// [교체·수정 예정]
+//   - Required: MovieGrid가 TmdbMovieCard를 쓰게 되면 삭제
+// ─────────────────────────────────────────────────────────────
+
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';

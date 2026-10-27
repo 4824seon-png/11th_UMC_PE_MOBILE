@@ -1,3 +1,24 @@
+// TMDB 영화 카드: 포스터·★10점 평점·제목·개봉 연도, 탭하면 TMDB id로 상세 이동
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (공통 위젯)
+//
+// [기능]
+//   - TmdbMovieCard(movie: TmdbMovieDto) : MovieCard와 같은 Figma 레이아웃
+//   - TmdbMovieCard.infoHeight(60) : Grid 칸 높이 계산용
+//
+// [동작]
+//   포스터는 TmdbPosterImage가 Positioned.fill 영역을 채운다
+//   개봉일이 null·빈 문자열이면 연도를 비워 둔다 (줄 높이는 유지)
+//   탭 → context.push('/movies/${id}') (TMDB id = 이후 평점 movieId)
+//
+// [의존성]
+//   사용   : go_router, data/models/tmdb_movie_dto.dart, widgets/tmdb_poster_image.dart
+//   사용처 : screens/home/home_screen.dart
+//
+// [교체·수정 예정]
+//   - Required: MovieGrid에서도 사용 (MovieCard 대체)
+// ─────────────────────────────────────────────────────────────
+
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/material.dart';

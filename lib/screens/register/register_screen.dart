@@ -1,3 +1,22 @@
+// 회원가입 화면: 닉네임·이메일·비밀번호 입력 검증과 약관 동의
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (2주차)
+//
+// [기능]
+//   - Form + validator 3개, FocusNode로 다음 칸 이동, 약관 체크 후 가입 버튼 활성화
+//   - _LabeledTextField : 라벨 + 입력창 + 상태 아이콘 묶음 위젯
+//
+// [동작]
+//   입력 변경 → setState → _canSubmit 재계산 → 가입 → 검증 통과 시 pushReplacement('/home')
+//
+// [의존성]
+//   사용   : go_router
+//   사용처 : router/app_router.dart (/register)
+//
+// [교체·수정 예정]
+//   - 없음 (5주차 범위 밖). 이후 MovieLog 자체 API 회원가입과 연결한다.
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 

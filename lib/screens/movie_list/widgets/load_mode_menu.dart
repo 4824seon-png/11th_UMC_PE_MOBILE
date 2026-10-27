@@ -1,3 +1,21 @@
+// [삭제 예정] 개발용 로드 모드(success/empty/failure) 선택 메뉴
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (debug 전용)
+//
+// [기능]
+//   - LoadModeMenu(selected, onSelected) : PopupMenuButton으로 MovieLoadMode 선택
+//
+// [동작]
+//   kDebugMode일 때 영화 탭 AppBar에만 표시된다
+//
+// [의존성]
+//   사용   : data/legacy/fake_movie_service.dart (MovieLoadMode)
+//   사용처 : screens/movie_list/movie_list_screen.dart
+//
+// [교체·수정 예정]
+//   - Required: FakeMovieService 제거와 함께 삭제 (Error는 401·네트워크 끊기로 재현)
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 
 import '../../../data/legacy/fake_movie_service.dart';

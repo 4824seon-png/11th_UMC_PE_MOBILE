@@ -1,3 +1,24 @@
+// [삭제 예정] 4주차 Future.delayed 기반 가짜 영화 Service
+// ─────────────────────────────────────────────────────────────
+// [계층]   Legacy (4주차 Mock)
+//
+// [기능]
+//   - MovieLoadMode            : success / empty / failure
+//   - MovieLoadException       : 실패 모드에서 던지는 예외
+//   - FakeMovieService.fetchMovies(mode) : 1초 뒤 모드별 결과 반환
+//
+// [동작]
+//   Future.delayed로 네트워크 지연을 흉내 낸 뒤 Mock 목록·빈 목록·예외 중 하나를 반환
+//
+// [의존성]
+//   사용   : data/legacy/mock_movies.dart, data/legacy/movie.dart
+//   사용처 : screens/movie_list/movie_list_screen.dart, screens/movie_list/widgets/load_mode_menu.dart
+//
+// [교체·수정 예정]
+//   - Required: MovieListViewModel + TmdbMovieService로 대체 후 삭제
+//   - Error 재현은 잘못된 Token(401)·네트워크 끊기로 한다
+// ─────────────────────────────────────────────────────────────
+
 import 'mock_movies.dart';
 import 'movie.dart';
 

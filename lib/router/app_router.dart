@@ -1,3 +1,28 @@
+// 앱의 모든 경로(URL)와 화면을 연결하고, 화면별 ViewModel을 생성하는 라우터
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · 라우팅
+//
+// [기능]
+//   - /start, /register                : 탭 없는 화면
+//   - ShellRoute(/home, /movies, /my)  : MainScreen(하단 탭) 안에 표시
+//   - /movies/:movieId                 : 상세 화면 (TMDB id를 Path Parameter로 받음)
+//   - indexFromLocation(path)          : URL → 하단 탭 번호
+//
+// [동작]
+//   /home 진입 → ChangeNotifierProvider.create (화면 수명 동안 1번)
+//   → MovieHomeViewModel(context.read<TmdbMovieService>())..loadPopular()
+//   → 화면을 떠나면 ViewModel dispose 자동 호출
+//
+// [의존성]
+//   사용   : go_router, provider, screens/*, view_models/movie_home_view_model.dart,
+//            data/services/tmdb_movie_service.dart
+//   사용처 : app/movie_log_app.dart (routerConfig)
+//
+// [교체·수정 예정]
+//   - Required: /movies에 ChangeNotifierProvider<MovieListViewModel>(..loadInitial()) 연결
+//   - Required 8: 상세 화면이 TMDB id로 영화를 표시하도록 /movies/:movieId 처리 보완
+// ─────────────────────────────────────────────────────────────
+
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 

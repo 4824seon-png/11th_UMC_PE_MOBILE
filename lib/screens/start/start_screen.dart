@@ -1,3 +1,21 @@
+// 시작 화면: 로고·소개 문구와 '시작하기' 버튼
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (1주차)
+//
+// [기능]
+//   - StartScreen : 로고 SVG, 소개 문구, 시작하기 → /register
+//
+// [동작]
+//   시작하기 → context.go('/register') (뒤로가기로 돌아오지 않도록 go 사용)
+//
+// [의존성]
+//   사용   : flutter_svg, go_router
+//   사용처 : router/app_router.dart (/start, 앱 첫 화면)
+//
+// [교체·수정 예정]
+//   - 없음.
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart'; // Scaffold, Column, ElevatedButton ...
 import 'package:flutter_svg/flutter_svg.dart'; // SvgPicture
 import 'package:go_router/go_router.dart'; // context.go

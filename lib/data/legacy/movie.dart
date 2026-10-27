@@ -1,3 +1,23 @@
+// [삭제 예정] 4주차 Mock 영화 모델
+// ─────────────────────────────────────────────────────────────
+// [계층]   Legacy (4주차 Mock)
+//
+// [기능]
+//   - Movie : id, title, genre(String), year, posterAsset, rating(5점), runningTime, synopsis
+//
+// [동작]
+//   mock_movies.dart의 const 목록과 FakeMovieService 결과 타입으로 쓰인다
+//
+// [의존성]
+//   사용   : 없음 (순수 데이터)
+//   사용처 : data/legacy/mock_movies.dart, data/legacy/fake_movie_service.dart,
+//            screens/movie_list/movie_list_screen.dart, screens/movie_list/widgets/movie_grid.dart,
+//            widgets/movie_card.dart, screens/movie_detail/movie_detail_screen.dart
+//
+// [교체·수정 예정]
+//   - Required 완료 후 삭제 (TmdbMovieDto로 대체). 기록은 Git에 남는다.
+// ─────────────────────────────────────────────────────────────
+
 /// 영화 한 편의 데이터 형태.
 /// 모든 필드가 final + const 생성자 → 불변 객체이며 `const movies = [...]`로 선언할 수 있다.
 class Movie {

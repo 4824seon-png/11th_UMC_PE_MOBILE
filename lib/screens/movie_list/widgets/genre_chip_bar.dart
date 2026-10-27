@@ -1,3 +1,22 @@
+// 가로 스크롤 장르 Chip 바 (단일 선택)
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (영화 목록 전용 위젯)
+//
+// [기능]
+//   - GenreChipBar(selectedGenre, onSelected) : ChoiceChip 목록, Figma W3-02 크기·색
+//
+// [동작]
+//   선택 상태는 부모가 갖고, 탭하면 onSelected(장르)로 알린다
+//
+// [의존성]
+//   사용   : data/legacy/mock_movies.dart (genres 문자열 목록)
+//   사용처 : screens/movie_list/movie_list_screen.dart
+//
+// [교체·수정 예정]
+//   - Required 13: 하드코딩 장르 → TmdbGenreDto 목록 + 맨 앞 '전체'(null)
+//   - Required 7: Discover 요청 중(loading)에는 Chip 선택을 막는다
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 
 import '../../../data/legacy/mock_movies.dart';

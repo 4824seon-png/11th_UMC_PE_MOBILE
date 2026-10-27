@@ -1,3 +1,21 @@
+// 평점 입력 Dialog: 별점을 고르고 확인하면 값을 반환한다
+// ─────────────────────────────────────────────────────────────
+// [계층]   UI Layer · View (상세 화면 전용 위젯)
+//
+// [기능]
+//   - RatingDialog : MovieRatingInput + 확인 버튼 (0점이면 비활성)
+//
+// [동작]
+//   확인 → Navigator.pop(context, rating) → showDialog<double>의 반환값이 된다
+//
+// [의존성]
+//   사용   : screens/movie_detail/widgets/movie_rating_input.dart
+//   사용처 : screens/movie_detail/movie_detail_screen.dart
+//
+// [교체·수정 예정]
+//   - Required 8: Dialog로 이동할 때 TmdbMovieDto.id를 전달 (이후 평점 API의 movieId)
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 
 import 'movie_rating_input.dart';

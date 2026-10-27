@@ -1,3 +1,22 @@
+// 앱 전체 ThemeData(색·글꼴·위젯 기본 스타일)를 정의한다
+// ─────────────────────────────────────────────────────────────
+// [계층]   Core · 테마
+//
+// [기능]
+//   - AppTheme.light : ColorScheme·Manrope 글꼴·AppBar·입력창 등 기본 스타일
+//   - AppTheme.radius : 기본 모서리 반경(8)
+//
+// [동작]
+//   AppColors 값을 ColorScheme에 매핑 → 화면은 Theme.of(context)로 꺼내 쓴다
+//
+// [의존성]
+//   사용   : flutter/material, core/theme/app_colors.dart
+//   사용처 : app/movie_log_app.dart (MaterialApp.router의 theme)
+//
+// [교체·수정 예정]
+//   - 없음.
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
 

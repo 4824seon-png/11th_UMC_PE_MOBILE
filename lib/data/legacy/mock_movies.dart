@@ -1,3 +1,25 @@
+// [삭제 예정] 4주차 Mock 영화 데이터·장르 목록·id 조회 함수
+// ─────────────────────────────────────────────────────────────
+// [계층]   Legacy (4주차 Mock)
+//
+// [기능]
+//   - movies         : Mock 영화 6편
+//   - allGenre, genres : '전체' + 하드코딩한 장르 이름
+//   - findMovieById(id) : id로 Mock 영화 조회 (없으면 null)
+//
+// [동작]
+//   컴파일 시점 상수(const)라 요청 없이 바로 사용된다
+//
+// [의존성]
+//   사용   : data/legacy/movie.dart
+//   사용처 : data/legacy/fake_movie_service.dart, data/storage/genre_preference.dart,
+//            screens/movie_list/movie_list_screen.dart, screens/movie_list/widgets/genre_chip_bar.dart,
+//            screens/movie_detail/movie_detail_screen.dart
+//
+// [교체·수정 예정]
+//   - Required 완료 후 삭제: 목록은 Discover, 장르는 Genre API, 상세는 TMDB id로 대체
+// ─────────────────────────────────────────────────────────────
+
 import 'movie.dart';
 
 /// 홈·목록·상세가 함께 사용하는 Mock 영화 데이터.

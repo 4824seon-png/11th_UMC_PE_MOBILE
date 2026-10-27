@@ -1,3 +1,21 @@
+// Figma 디자인 시스템의 원본 색상값 모음
+// ─────────────────────────────────────────────────────────────
+// [계층]   Core · 테마
+//
+// [기능]
+//   - AppColors.* : primary, surface, onSurfaceVariant 등 Figma 색상 상수
+//
+// [동작]
+//   화면에서는 직접 쓰지 않고 AppTheme의 ColorScheme을 거쳐 사용한다
+//
+// [의존성]
+//   사용   : flutter/material (Color)
+//   사용처 : core/theme/app_theme.dart
+//
+// [교체·수정 예정]
+//   - 없음.
+// ─────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
 
 /// Figma 디자인 시스템의 원본 색상값 모음.
