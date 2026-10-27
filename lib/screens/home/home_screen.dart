@@ -1,27 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-import '../../data/mock_movies.dart';
-import '../../models/movie.dart';
-import '../../widgets/movie_card.dart';
+import '../../data/models/tmdb_movie_dto.dart';
+import '../../view_models/movie_home_view_model.dart';
 import '../../widgets/movielog_app_bar.dart';
+import '../../widgets/tmdb_movie_card.dart';
+import '../../widgets/tmdb_poster_image.dart';
 
 /// 홈 탭 화면. MainScreen의 body(child)로 표시된다.
-///
-/// [결정] 검색 아이콘: 생략한다.
-/// - 디자인에는 있지만 검색 기능은 과제 범위 밖이라, 동작하지 않는 버튼을 두지 않는다.
-/// - 대안: 아이콘만 표시(탭해도 동작 없음).
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  /// 히어로 카드에 보여줄 영화.
-  ///
-  /// [결정] 추천 영화: 평점이 가장 높은 영화
-  /// - Mock 데이터에서 계산하므로 데이터가 바뀌어도 자동으로 따라간다.
-  /// - reduce: 리스트를 앞에서부터 두 개씩 비교해 하나만 남긴다 → 최고 평점 영화.
-  /// - 대안: movies.first(디자인과 같은 '별빛 아래 우리').
-  Movie get _featuredMovie =>
-      movies.reduce((best, movie) => movie.rating > best.rating ? movie : best);
 
   @override
   Widget build(BuildContext context) {
@@ -35,33 +25,68 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 인사 문구는 상태와 무관 → Consumer 밖에 두어 상태가 바뀌어도 다시 그리지 않는다.
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text('오늘은 어떤\n영화를 볼까요?', style: textTheme.headlineSmall),
             ),
             const SizedBox(height: 24),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _HomeHeroCard(movie: _featuredMovie),
+            // [5주차] 상태에 따라 바뀌는 영역만 Consumer로 감싼다.
+            // notifyListeners()가 호출되면 이 builder만 다시 실행된다.
+            Consumer<MovieHomeViewModel>(
+              builder: (context, viewModel, child) {
+                return switch (viewModel.status) {
+                  MovieHomeLoadStatus.idle ||
+                  MovieHomeLoadStatus.loading => const _HomeLoading(),
+                  MovieHomeLoadStatus.error => _HomeMessage(
+                    message: viewModel.message ?? '인기 영화를 불러오지 못했어요.',
+                    // 버튼 콜백: 한 번만 호출하므로 watch가 아니라 read.
+                    onRetry: () =>
+                        context.read<MovieHomeViewModel>().loadPopular(),
+                  ),
+                  MovieHomeLoadStatus.empty => const _HomeMessage(
+                    message: '표시할 인기 영화가 없어요.',
+                  ),
+                  MovieHomeLoadStatus.success => _PopularContent(
+                    movies: viewModel.popularMovies,
+                  ),
+                };
+              },
             ),
-            const SizedBox(height: 32),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _SectionHeader(
-                title: '인기 영화',
-                // [결정] 전체보기: go('/movies')
-                // - 영화 탭으로 "전환"하는 동작이다. NavigationBar의 탭 전환과 같은 방식이라
-                //   탭 강조도 URL에서 계산되어 자동으로 '영화'로 바뀌고, 스택이 쌓이지 않는다.
-                // - 대안: push('/movies') → 홈 위에 목록을 쌓아 뒤로가기로 돌아올 수 있지만,
-                //   탭 구조와 섞여 NavigationBar 동작이 헷갈리기 쉬워 제외.
-                onMorePressed: () => context.go('/movies'),
-              ),
-            ),
-            const SizedBox(height: 12),
-            const _PopularMovieList(),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Success 상태: 인기 1위 히어로 카드 + 인기 영화 가로 목록.
+class _PopularContent extends StatelessWidget {
+  const _PopularContent({required this.movies});
+
+  final List<TmdbMovieDto> movies; // success 상태이므로 항상 1개 이상
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          // [결정] 히어로 영화: 인기 1위 (Popular 결과의 첫 번째)
+          child: _HomeHeroCard(movie: movies.first),
+        ),
+        const SizedBox(height: 32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: _SectionHeader(
+            title: '인기 영화',
+            onMorePressed: () => context.go('/movies'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        _PopularMovieList(movies: movies),
+      ],
     );
   }
 }
@@ -70,23 +95,30 @@ class HomeScreen extends StatelessWidget {
 class _HomeHeroCard extends StatelessWidget {
   const _HomeHeroCard({required this.movie});
 
-  final Movie movie;
+  final TmdbMovieDto movie;
+
+  /// '2026 · ★ 8.5 / 10'. 개봉일이 없으면 연도는 생략한다.
+  String get _subtitle {
+    final date = movie.releaseDate;
+    final rating = '★ ${movie.voteAverage.toStringAsFixed(1)} / 10';
+    if (date == null || date.length < 4) return rating;
+    return '${date.substring(0, 4)} · $rating';
+  }
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // 스크롤 안에서는 높이가 무한하므로 AspectRatio로 카드 높이를 정한다.
     return AspectRatio(
       aspectRatio: 2 / 3,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
         child: Stack(
-          fit: StackFit.expand, // Positioned가 아닌 자식(이미지, 그라데이션)은 카드 전체를 채운다
+          fit: StackFit.expand,
           children: [
-            Image.asset(movie.posterAsset, fit: BoxFit.cover),
-            // 아래쪽으로 갈수록 어두워지는 그라데이션 → 흰 글자가 포스터 색과 관계없이 잘 보인다.
+            // [5주차] Image.asset → TMDB 포스터 (null·로드 실패 시 placeholder)
+            TmdbPosterImage(posterPath: movie.posterPath),
             const DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -97,7 +129,6 @@ class _HomeHeroCard extends StatelessWidget {
                 ),
               ),
             ),
-            // left + right + bottom 지정 → 가로는 양쪽 끝까지 늘어나고 아래쪽에 고정된다.
             Positioned(
               left: 24,
               right: 24,
@@ -115,7 +146,7 @@ class _HomeHeroCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      '평점 최고',
+                      '인기 1위',
                       style: textTheme.labelSmall?.copyWith(
                         color: colors.onPrimary,
                         fontWeight: FontWeight.w700,
@@ -125,13 +156,15 @@ class _HomeHeroCard extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     movie.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: textTheme.headlineSmall?.copyWith(
                       color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${movie.genre} · ${movie.year} · ${movie.runningTime}분',
+                    _subtitle,
                     style: textTheme.bodyMedium?.copyWith(
                       color: Colors.white70,
                     ),
@@ -140,11 +173,8 @@ class _HomeHeroCard extends StatelessWidget {
                   SizedBox(
                     width: double.infinity,
                     height: 52,
-                    // [결정] 히어로 카드 탭 영역: '상세보기' 버튼만
-                    // - 디자인에 버튼이 명시되어 있어 역할이 분명하다.
-                    // - 대안: 카드 전체를 GestureDetector로 감싸기 → 같은 동작이 두 군데 생긴다.
                     child: ElevatedButton.icon(
-                      // push: 상세에서 뒤로 돌아와야 하므로 쌓는다. id만 Path Parameter로 전달.
+                      // TMDB id를 그대로 전달한다. (상세 화면의 TMDB 연동은 Required에서 처리)
                       onPressed: () => context.push('/movies/${movie.id}'),
                       icon: const Icon(Icons.info),
                       label: const Text('상세보기'),
@@ -175,7 +205,6 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      // 제목은 왼쪽 끝, 버튼은 오른쪽 끝
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(title, style: Theme.of(context).textTheme.titleLarge),
@@ -191,30 +220,70 @@ class _SectionHeader extends StatelessWidget {
   }
 }
 
-/// '인기 영화' 가로 스크롤 목록.
-///
-/// [결정] 인기 영화 구성: Mock 영화 전체
-/// - 대안: 히어로 영화 제외 / 평점순 정렬.
+/// '인기 영화' 가로 스크롤 목록 (최대 5개).
 class _PopularMovieList extends StatelessWidget {
-  const _PopularMovieList();
+  const _PopularMovieList({required this.movies});
+
+  final List<TmdbMovieDto> movies;
 
   @override
   Widget build(BuildContext context) {
-    // 가로 ListView는 세로 크기를 스스로 정하지 못하므로 SizedBox로 높이를 지정한다.
-    // (세로 스크롤 안에 넣었을 때 높이를 주지 않으면 무한 높이 오류가 난다)
     return SizedBox(
       height: 280,
-      // 한 줄로 이어지는 UI → 가로 ListView, 항목 사이 간격 → separated (Notion 7번)
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
+        // 고정 숫자(5) 대신 실제 개수 → 5개보다 적게 와도 범위 오류가 없다.
         itemCount: movies.length,
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          // MovieCard는 부모가 크기를 정해야 한다 → 가로 목록에서는 너비를 지정한다.
-          // (높이는 ListView의 280을 그대로 사용)
-          return SizedBox(width: 150, child: MovieCard(movie: movies[index]));
+          return SizedBox(
+            width: 150,
+            child: TmdbMovieCard(movie: movies[index]),
+          );
         },
+      ),
+    );
+  }
+}
+
+/// Loading 상태: 히어로 카드 자리에 스피너.
+class _HomeLoading extends StatelessWidget {
+  const _HomeLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      height: 320,
+      child: Center(child: CircularProgressIndicator()),
+    );
+  }
+}
+
+/// Error·Empty 상태: 안내 문구 + (있으면) 다시 시도 버튼.
+class _HomeMessage extends StatelessWidget {
+  const _HomeMessage({required this.message, this.onRetry});
+
+  final String message;
+  final VoidCallback? onRetry; // null이면 버튼을 그리지 않는다 (Empty)
+
+  @override
+  Widget build(BuildContext context) {
+    final onRetry = this.onRetry; // 로컬 변수로 옮겨야 null 체크 후 타입 승격이 된다.
+
+    return SizedBox(
+      height: 320,
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(message),
+            if (onRetry != null) ...[
+              const SizedBox(height: 16),
+              FilledButton(onPressed: onRetry, child: const Text('다시 시도')),
+            ],
+          ],
+        ),
       ),
     );
   }

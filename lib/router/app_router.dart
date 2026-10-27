@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
+import '../data/services/tmdb_movie_service.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/main/main_screen.dart';
 import '../screens/movie_detail/movie_detail_screen.dart';
@@ -7,6 +9,7 @@ import '../screens/movie_list/movie_list_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/register/register_screen.dart';
 import '../screens/start/start_screen.dart';
+import '../view_models/movie_home_view_model.dart';
 
 /// 앱의 모든 경로(URL)와 화면의 연결을 한 곳에서 관리한다.
 class AppRouter {
@@ -40,7 +43,16 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/home',
-            builder: (context, state) => const HomeScreen(),
+            // [5주차] 홈 화면 전용 ViewModel을 이 Route에서 만든다.
+            // create는 화면에 처음 들어올 때 한 번만 실행되고(rebuild마다 X),
+            // 화면이 사라지면 ChangeNotifierProvider가 dispose를 호출한다.
+            builder: (context, state) => ChangeNotifierProvider(
+              // 캐스케이드(..): 생성 직후 첫 요청을 보내고, create의 반환값은 ViewModel 자신
+              create: (context) =>
+                  MovieHomeViewModel(context.read<TmdbMovieService>())
+                    ..loadPopular(),
+              child: const HomeScreen(),
+            ),
           ),
           GoRoute(
             path: '/movies',

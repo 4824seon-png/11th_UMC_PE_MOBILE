@@ -46,3 +46,12 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# TMDB 환경변수 (개인 Token). 키 이름만 담은 .env.example은 커밋한다.
+.env
+
+flutter:
+  assets:
+    - .envflutter:
+  assets:
+    - .env
