@@ -1,0 +1,48 @@
+[폴더] screens/ — 화면(View): 화면별 폴더 + 화면 전용 위젯
+════════════════════════════════════════════════════════════════
+
+■ 이 폴더의 역할
+   - 상태를 읽어 화면을 그리고, 사용자 입력을 ViewModel에 전달한다.
+   - 화면 하나 = 폴더 하나. 그 화면에서만 쓰는 위젯은 폴더 안의 widgets/에 둔다.
+     (워크북은 screens/에 파일을 나란히 두지만, 3주차부터 화면별 폴더 컨벤션을 사용한다.
+      "화면 코드와 데이터 코드를 섞지 않는다"는 원칙은 동일하다.)
+
+■ 넣지 않는 것
+   - API 호출·JSON 파싱·필터링 같은 비즈니스 로직 → view_models/, data/
+   - 여러 화면이 함께 쓰는 위젯 → lib/widgets/
+
+■ 화면 목록과 상태
+   start/start_screen.dart                 시작 화면 (1주차)                         [사용 중]
+   register/register_screen.dart           회원가입 (2주차)                          [사용 중]
+   main/main_screen.dart                   하단 탭 공통 레이아웃 (ShellRoute)          [사용 중]
+   home/home_screen.dart                   홈: TMDB 인기 1위 + 인기 5개 (5주차 MVVM)    [사용 중]
+   movie_list/movie_list_screen.dart       영화 탭: 현재 4주차 Mock + FutureBuilder     [교체 예정]
+     widgets/genre_chip_bar.dart           장르 Chip (하드코딩 문자열)                   [교체 예정]
+     widgets/movie_grid.dart               2열 Grid (Movie + MovieCard)                 [교체 예정]
+     widgets/movie_list_loading.dart       Loading 상태                                [재사용]
+     widgets/movie_list_empty.dart         Empty 상태                                  [재사용]
+     widgets/movie_list_error.dart         Error 상태 + 다시 시도                       [재사용]
+     widgets/load_mode_menu.dart           개발용 로드 모드 메뉴                         [삭제 예정]
+   movie_detail/movie_detail_screen.dart   상세: Mock id 조회, 즐겨찾기·평점·공유         [교체 예정]
+     widgets/rating_dialog.dart            평점 Dialog                                 [수정 예정]
+     widgets/movie_rating_input.dart       별점 입력                                   [사용 중]
+   profile/profile_screen.dart             마이 탭 (고정 값)                            [사용 중]
+     widgets/stat_item.dart                통계 카드                                    [사용 중]
+
+■ View 작성 규칙 (5주차)
+   - 상태 구독 : Consumer<VM>(builder: ...) — 바뀌는 영역만 감싼다
+                 (또는 build 안에서 context.watch<VM>() — build 전체가 다시 실행됨)
+   - 메서드 호출: 버튼·Chip 콜백 안에서 context.read<VM>().메서드()
+   - 분기      : switch (viewModel.status) { idle||loading / error / empty / success }
+   - 상세 이동 : context.push('/movies/${movie.id}') — index가 아니라 TMDB id
+
+■ 의존 관계
+   사용   : view_models/*, widgets/*, data/models/*(표시용 DTO 타입)
+   사용처 : router/app_router.dart
+
+■ 예정된 변경 (Required Mission)
+   - movie_list_screen: FutureBuilder → Consumer<MovieListViewModel> + switch(status),
+     _filterByGenre 삭제, LoadModeMenu 제거
+   - genre_chip_bar: TmdbGenreDto 목록 + 맨 앞 '전체'(null), loading 중 비활성화
+   - movie_grid: TmdbMovieDto + TmdbMovieCard
+   - movie_detail / rating_dialog: TmdbMovieDto.id 전달, legacy Mock 의존 제거

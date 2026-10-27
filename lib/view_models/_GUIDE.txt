@@ -1,0 +1,43 @@
+[폴더] view_models/ — 화면별 상태와 로직 (ChangeNotifier)
+════════════════════════════════════════════════════════════════
+
+■ 이 폴더의 역할
+   - 화면(페이지)마다 ViewModel을 하나씩 둔다.
+   - 로드 상태(idle/loading/success/empty/error), 화면에 필요한 데이터, 화면 정책을 가진다.
+   - 사용자 입력(재시도·장르 선택)에 따라 Service를 호출하고 notifyListeners()로 알린다.
+
+■ 넣지 않는 것
+   - Widget·BuildContext (화면을 그리는 코드)
+   - HTTP 요청·JSON 파싱 → data/services/, data/models/
+
+■ 파일 목록
+   movie_home_view_model.dart   홈: Popular 앞 5개, MovieHomeLoadStatus   [사용 중]
+   (Required) movie_list_view_model.dart
+                                영화 탭: Discover 최대 30개, 장르 재조회    [작성 예정]
+
+■ 동작 (MovieHomeViewModel.loadPopular)
+   status = loading, message = null → notifyListeners()        → 화면: 스피너
+   await _service.fetchPopular()
+   성공 : take(5) → success (0개면 empty)
+   실패 : DioException·기타 예외 → error + message
+   if (_disposed) return;  → notifyListeners()                 → 화면: 결과 표시
+
+■ 공통 규칙 (Required ViewModel도 동일하게)
+   - 값을 바꾼 "뒤에" notifyListeners()를 부른다.
+   - Service는 생성자로 주입받는다: MovieHomeViewModel(this._service)
+   - on DioException 외의 예외(TypeError 등)도 error로 처리 → Loading에 멈추지 않게
+   - dispose()에서 _disposed = true → 화면을 떠난 뒤 도착한 응답은 무시
+   - 상태는 enum + switch로 다룬다 (빠진 상태가 있으면 컴파일 에러)
+
+■ 의존 관계
+   사용   : flutter/foundation(ChangeNotifier), dio(DioException),
+            data/services/tmdb_movie_service.dart, data/models/*
+   사용처 : router/app_router.dart(ChangeNotifierProvider로 생성),
+            screens/*(Consumer로 구독, context.read로 메서드 호출)
+
+■ 예정된 변경 (Required Mission)
+   - movie_list_view_model.dart 추가
+     · fetchUpToThirtyMovies: page 1부터, Map<int, Dto>로 id 중복 제거, 30개 또는 마지막 페이지까지
+     · selectGenre(int? id): with_genres로 page 1부터 재조회, null = 전체
+     · _requestVersion으로 늦게 도착한 이전 장르 응답 무시
+     · 요청 중(loading)에는 장르 변경 막기 (미션 7)

@@ -1,0 +1,75 @@
+[폴더] lib/ — MovieLog 앱 전체 코드 지도
+════════════════════════════════════════════════════════════════
+
+■ 한눈에 보는 계층 구조 (5주차 MVVM)
+
+   [View]        screens/, widgets/        상태를 읽어 그리고, 입력을 ViewModel에 전달
+      ▲  notifyListeners()     │  context.read<VM>().메서드()
+      │                        ▼
+   [ViewModel]   view_models/              화면별 상태(Loading/Empty/Error/Success)와 정책
+                               │  await _service.xxx()
+                               ▼
+   [Service]     data/services/            HTTP 요청 + JSON → DTO 변환 (상태 없음)
+   [Model]       data/models/              응답 데이터 그릇(DTO)
+   [Core]        core/                     Dio Client·Token 설정·테마 (앱 전역)
+                               │
+                               ▼
+                           TMDB 서버
+
+■ 폴더 목록 (각 폴더의 _GUIDE.txt에 상세 설명)
+
+   main.dart        앱 진입점: .env 로드 → MovieLogApp 실행
+   app/             앱 최상단 위젯: MultiProvider + MaterialApp.router
+   router/          URL ↔ 화면 연결, 화면별 ViewModel 생성
+   core/            config(Token) · network(Dio·로그) · theme(색·글꼴)
+   data/            models(DTO) · services(TMDB) · storage(기기 저장) · legacy(4주차 Mock)
+   view_models/     화면별 ViewModel (ChangeNotifier)
+   screens/         화면(View) — 화면별 폴더, 전용 위젯은 각 폴더의 widgets/
+   widgets/         여러 화면이 함께 쓰는 공통 위젯
+
+■ import 방향 규칙 (위 → 아래로만 import)
+
+   screens / widgets
+        ↓
+   view_models
+        ↓
+   data/services → data/models
+        ↓
+   core
+
+   - 반대 방향 금지: Service가 ViewModel이나 Widget을 import하면 안 된다.
+   - 화면(View)은 Service를 직접 부르지 않는다. 반드시 ViewModel을 거친다.
+   - DTO(data/models)는 아무것도 import하지 않는 순수 데이터다.
+
+■ 앱 실행 흐름
+
+   main() ─ dotenv.load('.env') ─ runApp(MovieLogApp)
+     └ app/movie_log_app.dart : MultiProvider(TmdbMovieService) → MaterialApp.router
+         └ router/app_router.dart : /start → /register → /home (ShellRoute 탭)
+             └ /home : ChangeNotifierProvider(MovieHomeViewModel..loadPopular())
+                 └ screens/home/home_screen.dart : Consumer로 상태 표시
+
+■ 파일 헤더 주석 읽는 법 (모든 .dart 파일 맨 위)
+
+   첫 줄           이 파일이 하는 일
+   [계층]          UI Layer(View·ViewModel) / Data Layer / Core / Legacy
+   [기능]          공개 클래스·메서드와 역할
+   [동작]          실행 흐름 요약
+   [의존성]        사용(이 파일이 import) / 사용처(이 파일을 쓰는 곳)
+   [교체·수정 예정] Required Mission 등에서 바뀌거나 삭제될 부분
+
+■ 진행 상태 (5주차)
+
+   완료      5~11단계, 14단계(홈) = Guided Practice (홈 인기 영화 5개)
+   다음      Required Mission
+             - 12. Discover 최대 30개 / 13. 장르 with_genres 재조회
+             - 14. /movies에 MovieListViewModel 연결
+             - 8.  상세·평점 Dialog로 TmdbMovieDto.id 전달
+   정리 예정  data/legacy/, widgets/movie_card.dart,
+             screens/movie_list/widgets/load_mode_menu.dart (Required 완료 후 삭제)
+
+■ 주의
+
+   - 프로젝트 루트의 .env(TMDB Token)는 Git에 올리지 않는다. 새로 받으면 .env.example을 복사한다.
+   - 파일을 옮기거나 추가하면 해당 폴더의 _GUIDE.txt와 파일 헤더의 [의존성]도 함께 갱신한다.
+   - 이 .txt 파일들은 빌드·analyze에 영향을 주지 않는다.
