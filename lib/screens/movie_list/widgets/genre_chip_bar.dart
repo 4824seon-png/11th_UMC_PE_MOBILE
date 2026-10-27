@@ -1,39 +1,54 @@
-// 가로 스크롤 장르 Chip 바 (단일 선택)
+// 가로 스크롤 장르 Chip 바: '전체' + TMDB 장르 (단일 선택, 로드 중 비활성)
 // ─────────────────────────────────────────────────────────────
 // [계층]   UI Layer · View (영화 목록 전용 위젯)
 //
 // [기능]
-//   - GenreChipBar(selectedGenre, onSelected) : ChoiceChip 목록, Figma W3-02 크기·색
+//   - GenreChipBar(genres, selectedGenreId, enabled, onSelected)
+//     맨 앞 '전체'(id null) + Genre API 장르들, Figma W3-02 크기·색
 //
 // [동작]
-//   선택 상태는 부모가 갖고, 탭하면 onSelected(장르)로 알린다
+//   index 0 = '전체'(null), index 1~ = genres[index - 1]
+//   탭 → onSelected(장르 id 또는 null) → 부모가 ViewModel.selectGenre 호출
+//   [미션 7] enabled == false(로드 중)이면 onSelected: null → Chip 비활성
+//            비활성이어도 선택 색은 유지해 어떤 장르를 불러오는 중인지 보여준다
 //
 // [의존성]
-//   사용   : data/legacy/mock_movies.dart (genres 문자열 목록)
+//   사용   : data/models/tmdb_genre_dto.dart
 //   사용처 : screens/movie_list/movie_list_screen.dart
 //
 // [교체·수정 예정]
-//   - Required 13: 하드코딩 장르 → TmdbGenreDto 목록 + 맨 앞 '전체'(null)
-//   - Required 7: Discover 요청 중(loading)에는 Chip 선택을 막는다
+//   - Challenge: 장르 다중 선택은 BottomSheet로 구현 (이 바는 단일 선택 유지)
 // ─────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
 
-import '../../../data/legacy/mock_movies.dart';
+import '../../../data/models/tmdb_genre_dto.dart';
 
 /// 가로로 스크롤되는 장르 Chip 바.
-/// 선택 상태는 부모(MovieListScreen)가 가지고, 이 위젯은 표시와 선택 알림만 담당한다.
+/// 선택 상태는 부모(ViewModel)가 가지고, 이 위젯은 표시와 선택 알림만 담당한다.
 ///
 /// 크기·색은 Figma W3-02 "Section - Genre Filter Chips" 값을 따른다.
 class GenreChipBar extends StatelessWidget {
   const GenreChipBar({
     super.key,
-    required this.selectedGenre,
+    required this.genres,
+    required this.selectedGenreId,
+    required this.enabled,
     required this.onSelected,
   });
 
-  final String selectedGenre;
-  final ValueChanged<String> onSelected;
+  /// Genre API로 받은 장르 목록. 아직 받기 전이면 빈 목록 → '전체'만 표시.
+  final List<TmdbGenreDto> genres;
+
+  /// 선택한 장르 id. null = 전체.
+  final int? selectedGenreId;
+
+  /// false면 모든 Chip을 비활성화한다. (Discover 요청 중)
+  final bool enabled;
+
+  final ValueChanged<int?> onSelected;
+
+  static const _allGenreLabel = '전체';
 
   @override
   Widget build(BuildContext context) {
@@ -42,28 +57,29 @@ class GenreChipBar extends StatelessWidget {
     // 가로 ListView는 세로 크기를 스스로 정하지 못하므로 SizedBox로 높이를 지정한다.
     return SizedBox(
       height: 40, // Figma 섹션 높이 (Chip 32px이 세로 가운데)
-      // [결정] Chip 바 레이아웃: 가로 ListView.separated
-      // - Notion 7번: 한 줄로 이어지는 UI → 가로 ListView, 항목 사이 간격 → separated.
-      // - 디자인처럼 Chip이 화면 밖으로 이어지며 가로 스크롤된다.
-      // - 대안: Wrap → 넘치면 다음 줄로 내려가 디자인(한 줄 스크롤)과 달라 제외.
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16), // Figma 좌우 16
-        itemCount: genres.length,
+        itemCount: genres.length + 1, // 맨 앞 '전체' 1개 + TMDB 장르
         separatorBuilder: (context, index) => const SizedBox(width: 8),
         itemBuilder: (context, index) {
-          final genre = genres[index];
-          final isSelected = genre == selectedGenre;
+          // [미션 6] '전체'는 id가 없다(null) → Service가 with_genres를 보내지 않는다.
+          final genreId = index == 0 ? null : genres[index - 1].id;
+          final label = index == 0 ? _allGenreLabel : genres[index - 1].name;
+          final isSelected = genreId == selectedGenreId;
 
-          // [결정] Chip 종류: ChoiceChip
-          // - 여러 개 중 하나만 선택하는 용도의 Chip (selected / onSelected 제공).
-          // - 대안: FilterChip → 여러 개를 동시에 켜고 끄는 용도라 단일 선택에는 의미가 맞지 않아 제외.
+          // [결정] Chip 종류: ChoiceChip (여러 개 중 하나만 선택)
           return Center(
             child: ChoiceChip(
-              label: Text(genre),
+              label: Text(label),
               selected: isSelected,
-              // 이미 선택된 Chip을 다시 눌러도 선택이 풀리지 않도록 항상 해당 장르를 전달한다.
-              onSelected: (_) => onSelected(genre),
+              // [미션 7] 로드 중에는 null → Chip이 눌리지 않는다(접근성에도 '비활성'으로 전달).
+              onSelected: enabled ? (_) => onSelected(genreId) : null,
+              // [결정] 비활성 모양: 기존 색 유지 (아래 스피너로 로딩을 보여준다)
+              // - 대안: 기본 비활성 색(회색) → 선택 장르가 안 보이고 흰 글자가 묻혀 제외.
+              disabledColor: isSelected
+                  ? colors.primary
+                  : colors.surfaceContainerHighest,
               showCheckmark: false, // 디자인: 체크 표시 없이 색으로만 구분
               // Figma: 좌우 16 · 상하 8 패딩 → 높이 32
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -76,7 +92,6 @@ class GenreChipBar extends StatelessWidget {
               selectedColor: colors.primary, // #6750A4
               backgroundColor: colors.surfaceContainerHighest, // #E6E0E9
               // Figma: 선택된 Chip에만 그림자 (Y 1, 흐림 2, 검정 5%)
-              // elevation 1 ≈ Y 1·흐림 2. 미선택은 그림자 색을 투명으로 두어 선택 Chip만 그림자가 보인다.
               elevation: 1,
               pressElevation: 1,
               shadowColor: Colors.transparent,

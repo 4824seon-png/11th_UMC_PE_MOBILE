@@ -199,7 +199,8 @@ class _HomeHeroCard extends StatelessWidget {
                     height: 52,
                     child: ElevatedButton.icon(
                       // TMDB id를 그대로 전달한다. (상세 화면의 TMDB 연동은 Required에서 처리)
-                      onPressed: () => context.push('/movies/${movie.id}'),
+                      onPressed: () =>
+                          context.push('/movies/${movie.id}', extra: movie),
                       icon: const Icon(Icons.info),
                       label: const Text('상세보기'),
                       style: ElevatedButton.styleFrom(

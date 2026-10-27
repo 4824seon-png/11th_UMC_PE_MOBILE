@@ -1,22 +1,24 @@
-// TMDB 영화 카드: 포스터·★10점 평점·제목·개봉 연도, 탭하면 TMDB id로 상세 이동
+// TMDB 영화 카드: 포스터·★10점 평점·제목·연도/장르, 탭하면 TMDB id로 상세 이동
 // ─────────────────────────────────────────────────────────────
 // [계층]   UI Layer · View (공통 위젯)
 //
 // [기능]
-//   - TmdbMovieCard(movie: TmdbMovieDto) : MovieCard와 같은 Figma 레이아웃
+//   - TmdbMovieCard(movie, genreName?) : MovieCard와 같은 Figma 레이아웃
 //   - TmdbMovieCard.infoHeight(60) : Grid 칸 높이 계산용
 //
 // [동작]
 //   포스터는 TmdbPosterImage가 Positioned.fill 영역을 채운다
-//   개봉일이 null·빈 문자열이면 연도를 비워 둔다 (줄 높이는 유지)
-//   탭 → context.push('/movies/${id}') (TMDB id = 이후 평점 movieId)
+//   부제 = 개봉 연도 · 장르 이름 (없는 값은 빼고 ' · '로 연결, 둘 다 없으면 빈 줄)
+//   탭 → context.push('/movies/${id}', extra: movie)
+//        URL의 id가 기준, extra는 상세 화면이 바로 그리기 위한 영화 데이터
 //
 // [의존성]
 //   사용   : go_router, data/models/tmdb_movie_dto.dart, widgets/tmdb_poster_image.dart
-//   사용처 : screens/home/home_screen.dart
+//   사용처 : screens/home/home_screen.dart (genreName 없음 → 연도만),
+//            screens/movie_list/widgets/movie_grid.dart (genreName 전달)
 //
 // [교체·수정 예정]
-//   - Required: MovieGrid에서도 사용 (MovieCard 대체)
+//   - 없음.
 // ─────────────────────────────────────────────────────────────
 
 import 'dart:ui' show ImageFilter;
@@ -27,18 +29,19 @@ import 'package:go_router/go_router.dart';
 import '../data/models/tmdb_movie_dto.dart';
 import 'tmdb_poster_image.dart';
 
-/// TMDB 영화 한 편을 보여주는 카드. (MovieCard의 TMDB 버전)
-/// 탭하면 TMDB id로 상세 화면에 이동한다.
-///
+/// TMDB 영화 한 편을 보여주는 카드.
 /// 크기는 부모가 정한다(홈: SizedBox, 목록: Grid 칸).
 /// 레이아웃·색은 Figma W3-02 "Article - Movie Item" 값을 따른다.
 class TmdbMovieCard extends StatelessWidget {
-  const TmdbMovieCard({super.key, required this.movie});
+  const TmdbMovieCard({super.key, required this.movie, this.genreName});
 
   /// 포스터 아래 텍스트 영역의 고정 높이. (간격 4 + 위 여백 8 + 제목 24 + 부제 24)
   static const double infoHeight = 60;
 
   final TmdbMovieDto movie;
+
+  /// 부제에 표시할 장르 이름. 장르 목록을 모르는 화면(홈)에서는 null → 연도만 표시.
+  final String? genreName;
 
   /// 'YYYY-MM-DD'에서 연도만 꺼낸다.
   /// TMDB는 개봉일이 없으면 null 또는 빈 문자열을 주므로 둘 다 '표시 안 함'으로 처리한다.
@@ -48,14 +51,18 @@ class TmdbMovieCard extends StatelessWidget {
     return date.substring(0, 4);
   }
 
+  /// Figma 부제 형식 '2024 · SF'. ?genreName: null이면 리스트에 넣지 않는다.
+  String get _subtitle =>
+      [_releaseYear, ?genreName].where((text) => text.isNotEmpty).join(' · ');
+
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      // index가 아니라 TMDB id를 전달한다. 이 값이 이후 평점 API의 movieId가 된다.
-      onTap: () => context.push('/movies/${movie.id}'),
+      // [미션 8] URL에는 TMDB id(이후 평점 API의 movieId), extra에는 화면 표시용 영화 데이터.
+      onTap: () => context.push('/movies/${movie.id}', extra: movie),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -105,7 +112,7 @@ class TmdbMovieCard extends StatelessWidget {
           Opacity(
             opacity: 0.8,
             child: Text(
-              _releaseYear, // 개봉일이 없으면 빈 줄(높이는 유지되어 카드 정렬이 깨지지 않음)
+              _subtitle, // 비어 있어도 줄 높이는 유지되어 카드 정렬이 깨지지 않는다
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

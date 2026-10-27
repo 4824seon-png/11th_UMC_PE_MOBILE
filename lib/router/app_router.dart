@@ -5,28 +5,31 @@
 // [기능]
 //   - /start, /register                : 탭 없는 화면
 //   - ShellRoute(/home, /movies, /my)  : MainScreen(하단 탭) 안에 표시
-//   - /movies/:movieId                 : 상세 화면 (TMDB id를 Path Parameter로 받음)
+//   - /movies/:movieId                 : 상세 화면 (URL = TMDB id, extra = TmdbMovieDto)
 //   - indexFromLocation(path)          : URL → 하단 탭 번호
 //
 // [동작]
-//   /home 진입 → ChangeNotifierProvider.create (화면 수명 동안 1번)
-//   → MovieHomeViewModel(context.read<TmdbMovieService>())..loadPopular()
-//   → 화면을 떠나면 ViewModel dispose 자동 호출
+//   /home   → ChangeNotifierProvider(MovieHomeViewModel..loadPopular())
+//   /movies → ChangeNotifierProvider(MovieListViewModel(service, GenrePreference())..loadInitial())
+//   create는 화면 수명 동안 1번, 화면을 떠나면 ViewModel dispose 자동 호출
+//   /movies/:movieId → state.extra가 TmdbMovieDto일 때만 상세 화면에 전달
 //
 // [의존성]
-//   사용   : go_router, provider, screens/*, view_models/movie_home_view_model.dart,
-//            data/services/tmdb_movie_service.dart
+//   사용   : go_router, provider, screens/*, view_models/*,
+//            data/services/tmdb_movie_service.dart, data/storage/genre_preference.dart,
+//            data/models/tmdb_movie_dto.dart
 //   사용처 : app/movie_log_app.dart (routerConfig)
 //
 // [교체·수정 예정]
-//   - Required: /movies에 ChangeNotifierProvider<MovieListViewModel>(..loadInitial()) 연결
-//   - Required 8: 상세 화면이 TMDB id로 영화를 표시하도록 /movies/:movieId 처리 보완
+//   - 이후: 상세 화면을 TMDB 상세 API로 바꾸면 extra 없이 id만 전달
 // ─────────────────────────────────────────────────────────────
 
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../data/models/tmdb_movie_dto.dart';
 import '../data/services/tmdb_movie_service.dart';
+import '../data/storage/genre_preference.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/main/main_screen.dart';
 import '../screens/movie_detail/movie_detail_screen.dart';
@@ -35,6 +38,7 @@ import '../screens/profile/profile_screen.dart';
 import '../screens/register/register_screen.dart';
 import '../screens/start/start_screen.dart';
 import '../view_models/movie_home_view_model.dart';
+import '../view_models/movie_list_view_model.dart';
 
 /// 앱의 모든 경로(URL)와 화면의 연결을 한 곳에서 관리한다.
 class AppRouter {
@@ -60,7 +64,6 @@ class AppRouter {
         builder: (context, state, child) {
           return MainScreen(
             // 선택된 탭 번호를 상태로 들고 있지 않고 URL에서 계산한다.
-            // → 화면(child)과 탭 강조(currentIndex)가 같은 URL에서 나오므로 어긋나지 않는다.
             currentIndex: indexFromLocation(state.uri.path),
             child: child,
           );
@@ -81,7 +84,15 @@ class AppRouter {
           ),
           GoRoute(
             path: '/movies',
-            builder: (context, state) => const MovieListScreen(),
+            // [5주차 Required] 영화 탭 전용 ViewModel.
+            // GenrePreference는 영화 탭에서만 쓰므로 여기서 만들어 생성자로 주입한다.
+            builder: (context, state) => ChangeNotifierProvider(
+              create: (context) => MovieListViewModel(
+                context.read<TmdbMovieService>(),
+                GenrePreference(),
+              )..loadInitial(),
+              child: const MovieListScreen(),
+            ),
           ),
           GoRoute(
             path: '/my',
@@ -96,11 +107,16 @@ class AppRouter {
       GoRoute(
         // ':movieId' = Path Parameter. 아래 pathParameters의 key와 철자가 같아야 한다.
         path: '/movies/:movieId',
-        builder: (context, state) => MovieDetailScreen(
-          // URL 값은 항상 String → int로 변환한다.
-          // tryParse: 숫자가 아니면(예: /movies/abc) 예외 대신 null을 반환한다.
-          movieId: int.tryParse(state.pathParameters['movieId'] ?? ''),
-        ),
+        builder: (context, state) {
+          // [미션 8] extra = push할 때 함께 넘긴 영화. URL에 남지 않아 딥링크에서는 null.
+          // as로 강제 변환하지 않고 is로 확인한다 → 다른 타입이 와도 앱이 죽지 않는다.
+          final extra = state.extra;
+          return MovieDetailScreen(
+            // URL 값은 항상 String → int로 변환한다. 숫자가 아니면 null.
+            movieId: int.tryParse(state.pathParameters['movieId'] ?? ''),
+            movie: extra is TmdbMovieDto ? extra : null,
+          );
+        },
       ),
     ],
   );
