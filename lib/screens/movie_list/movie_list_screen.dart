@@ -2,10 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../data/mock_movies.dart';
-import '../../models/movie.dart';
-import '../../services/fake_movie_service.dart';
-import '../../storage/genre_preference.dart';
+import '../../data/legacy/fake_movie_service.dart';
+import '../../data/legacy/mock_movies.dart';
+import '../../data/legacy/movie.dart';
+import '../../data/storage/genre_preference.dart';
 import '../../widgets/movielog_app_bar.dart';
 import 'widgets/genre_chip_bar.dart';
 import 'widgets/load_mode_menu.dart';

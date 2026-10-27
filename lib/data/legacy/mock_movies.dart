@@ -1,4 +1,4 @@
-import '../models/movie.dart';
+import 'movie.dart';
 
 /// 홈·목록·상세가 함께 사용하는 Mock 영화 데이터.
 ///

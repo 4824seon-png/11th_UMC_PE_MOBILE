@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/mock_movies.dart';
+import '../../../data/legacy/mock_movies.dart';
 
 /// 가로로 스크롤되는 장르 Chip 바.
 /// 선택 상태는 부모(MovieListScreen)가 가지고, 이 위젯은 표시와 선택 알림만 담당한다.

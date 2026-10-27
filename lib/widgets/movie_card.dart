@@ -3,7 +3,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../models/movie.dart';
+import '../data/legacy/movie.dart';
 
 /// 포스터·평점·제목·연도/장르를 보여주는 공통 영화 카드.
 /// 탭하면 해당 영화의 상세 화면으로 이동한다.

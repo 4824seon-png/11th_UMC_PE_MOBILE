@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-import '../../data/mock_movies.dart';
-import '../../models/movie.dart';
+import '../../data/legacy/mock_movies.dart';
+import '../../data/legacy/movie.dart';
 import 'widgets/rating_dialog.dart';
 
 /// 영화 상세 화면. 경로 /movies/:movieId

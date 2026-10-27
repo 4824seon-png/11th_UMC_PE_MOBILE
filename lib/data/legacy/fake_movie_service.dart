@@ -1,5 +1,5 @@
-import '../data/mock_movies.dart';
-import '../models/movie.dart';
+import 'mock_movies.dart';
+import 'movie.dart';
 
 /// FakeMovieService가 어떤 결과로 끝날지 정하는 모드.
 /// 실제 서버 없이 Success·Empty·Error 화면을 재현하기 위해 사용한다.

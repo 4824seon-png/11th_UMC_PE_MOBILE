@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../services/fake_movie_service.dart';
+import '../../../data/legacy/fake_movie_service.dart';
 
 /// 개발용 로드 모드 선택 메뉴 (kDebugMode에서만 표시).
 /// Empty·Error 화면과 재시도 흐름을 앱 실행 중에 재현하기 위해 사용한다.

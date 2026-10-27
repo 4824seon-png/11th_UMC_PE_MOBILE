@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../core/network/tmdb_client.dart';
 import '../data/services/tmdb_movie_service.dart';
 import '../router/app_router.dart';
-import '../theme/app_theme.dart';
+import '../core/theme/app_theme.dart';
 
 /// 앱의 최상단 위젯.
 

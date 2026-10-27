@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../data/mock_movies.dart';
+import '../legacy/mock_movies.dart';
 
 /// 영화 목록에서 마지막으로 선택한 장르를 기기에 저장·복원한다.
 ///
